@@ -1,6 +1,5 @@
 import { quicktype, InputData, JSONSchemaInput, JSONSchemaStore, jsonInputForTargetLanguage } from 'quicktype-core';
-import jsonToJsonSchema from 'to-json-schema';
-import { SchemaObjectTS, ObjectValueTS } from '../types';
+import { SchemaObjectTS } from '../types';
 
 
 /**
@@ -58,39 +57,6 @@ export const genCodeByJsonSchema = async (targetLanguage: string, typeName: stri
 
 
 /**
- * 获取 JsonSchema，通过json
- *
- * @param {ObjectValueTS} jsonData
- * @return {*}  {SchemaObjectTS}
- */
-export const getJsonSchemaByJson = (jsonData: ObjectValueTS): SchemaObjectTS => {
-  const jsonSchema = jsonToJsonSchema(jsonData);
-
-  // TODO: JSON 中required生成了非必填
-  // 处理 json 类型数据，没找到 required 的统一设置为 true
-  function setJsonSchemaRequired(jsonSchema: ObjectValueTS) {
-    const addRequired = (jsonSchema: ObjectValueTS) => {
-      for (const key in jsonSchema) {
-        if (Object.prototype.toString.call(jsonSchema[key]) === '[object Object]') {
-          jsonSchema[key].required = jsonSchema[key].required === undefined ? true : jsonSchema[key].required;
-
-          addRequired(jsonSchema[key] as SchemaObjectTS);
-        }
-      }
-    };
-    addRequired(jsonSchema);
-  }
-
-  if ((jsonSchema as SchemaObjectTS).properties) {
-    // @ts-ignore
-    setJsonSchemaRequired(jsonSchema.properties)
-  }
-
-  return jsonSchema;
-}
-
-
-/**
  * 生成TS代码，通过jsonSchema
  *
  * @param {string} targetLanguage
@@ -109,21 +75,21 @@ export const genTSByJsonSchema = async (jsonSchema: SchemaObjectTS, name = 'Root
     return target.replace(/:\s*/, `:${' '.repeat(length)}`)
   }
 
-  let rootStartIndex = 0;
-  let rootEndIndex = 0;
+  // let rootStartIndex = 0;
+  // let rootEndIndex = 0;
 
-  ts.some((item: string, index: number) => {
-    if (item === 'export interface Root {') {
-      rootStartIndex = index;
-    }
+  // ts.some((item: string, index: number) => {
+  //   if (item === 'export interface Root {') {
+  //     rootStartIndex = index;
+  //   }
 
-    if (item === '}') {
-      rootEndIndex = index;
-      return true;
-    }
-  });
+  //   if (item === '}') {
+  //     rootEndIndex = index;
+  //     return true;
+  //   }
+  // });
 
-  ts.splice(rootStartIndex, rootEndIndex - 1, '', '')
+  // ts.splice(rootStartIndex, rootEndIndex - 1, '', '')
 
   return ts.map((item: string) => removeLangIndent(item)).join("\n");
 }

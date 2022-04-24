@@ -3,6 +3,7 @@ import swaggerSimple from "./swagger-simple.json";
 import { getApiBySwagger, genTSByApi } from "../open";
 import { simpleData } from './simpleData';
 import fs from "fs-extra";
+import { dataTypeEnum } from '../types';
 
 // 验证 swagger
 // (async () => {
@@ -22,7 +23,7 @@ import fs from "fs-extra";
 
 // 验证 json
 (async () => {
-  const TSCodes = await genTSByApi(simpleData, 'json', "./exports");
+  const TSCodes = await genTSByApi(simpleData, dataTypeEnum.json, "./exports");
 
   // 文件输出
   for (const [path, schema] of Object.entries(TSCodes)) {

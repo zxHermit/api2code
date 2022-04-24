@@ -1,7 +1,9 @@
 import path from "path";
-import { dataTypeEnum, ObjectValueTS, SwaggerJsonTS, ApiJsonItemTS, ApiJsonSchemaItemTS, ApiInfoTS, GenTSOptionsTS, GenHTTPOptionsTS } from './types/index';
+import jsonToJsonSchema from 'to-json-schema';
+import { dataTypeEnum, ObjectValueTS, SwaggerJsonTS, ApiJsonItemTS, ApiJsonSchemaItemTS,
+  ApiInfoTS, GenTSOptionsTS, GenHTTPOptionsTS } from './types/index';
 import { parseSwagger } from './utils/parseSwagger';
-import { genTSByJsonSchema, getJsonSchemaByJson } from './utils/transform';
+import { genTSByJsonSchema } from './utils/transform';
 import { pascalCase } from 'change-case';
 
 
@@ -20,19 +22,16 @@ export const getApiBySwagger = async (swagger: SwaggerJsonTS): Promise<ApiInfoTS
 
 /**
  * 获取TS类型代码，通过API数据
- *
- * @param {ApiItemSimpleTS[]} apiList
- * @param {string} dataType // json | jsonSchema
- * @param {string} exportPath
- * @param {GenTSOptionsTS} [options={}]
- * @return {*}  {Promise<{[key: string]: string}>}
  */
-export const genTSByApi = async (apiList: ApiJsonSchemaItemTS[] | ApiJsonItemTS[], dataType: string, exportPath: string, options: GenTSOptionsTS = {}): Promise<{[key: string]: string}> => {
+export const genTSByApi = async (apiList: ApiJsonSchemaItemTS[] | ApiJsonItemTS[], dataType:
+  dataTypeEnum, exportPath: string, options: GenTSOptionsTS = {}): Promise<{[key: string]: string}> => {
+
   const fileTSNameCount: ObjectValueTS = {};
   const pathInterfaceNum: ObjectValueTS = {};
 
   // @ts-ignore
   const apiListSchema = apiList.reduce((total: ObjectValueTS, item: ApiItemSimpleTS) => {
+
     const { name, path, method, requestPathParam, requestPathQuery, requestBody, responseList } = item;
 
     if (!total[path]) {
@@ -54,7 +53,7 @@ export const genTSByApi = async (apiList: ApiJsonSchemaItemTS[] | ApiJsonItemTS[
     const properties: ObjectValueTS = total[path].properties;
 
     const getJsonSchema = (data: ObjectValueTS, type: dataTypeEnum) => {
-      return type === dataTypeEnum.json ? getJsonSchemaByJson(data) : data;
+      return type === dataTypeEnum.json ? jsonToJsonSchema(data, {required: true}) : data;
     }
 
     // 请求 url param
@@ -88,6 +87,9 @@ export const genTSByApi = async (apiList: ApiJsonSchemaItemTS[] | ApiJsonItemTS[
       ...getJsonSchema(requestBody, dataType),
       description: `接口名称：${name} \n 接口请求方法：${method.toUpperCase()} \n 接口请求路径：${path} \n  \n TS类型代码：请求body`
     }
+
+    console.log('---requestBodyHandled', requestBodyHandled);
+
     if (properties[`${preName}RequestBody`]) {
       const num = fileTSNameCount[`${path}-${preName}RequestBody`] += 1;
       properties[`${preName}RequestBody${num}`] = requestBodyHandled;
@@ -136,12 +138,12 @@ export const genTSByApi = async (apiList: ApiJsonSchemaItemTS[] | ApiJsonItemTS[
   const result:ObjectValueTS = {};
 
   for (const [key, value] of Object.entries(apiListSchema)) {
-    // const filePath = path.resolve(process.cwd(), `${exportPath.startsWith('/') ? exportPath : '/'+exportPath}${key}.ts`);
-
     const filePath = path.resolve(process.cwd(), `${exportPath}${key.startsWith('/') ? key : '/'+key}.ts`);
 
+    // @ts-ignore
+    value.description = `${value.description}，共涵盖${pathInterfaceNum[key]}个接口`;
 
-    value.description = `${value.description}，共涵盖${pathInterfaceNum[key]}个接口`
+    // @ts-ignore
     result[filePath] = await genTSByJsonSchema(value);
   }
 

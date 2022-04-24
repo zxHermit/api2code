@@ -41,14 +41,14 @@ enum SwaggerParameterInEnum {
 }
 
 export enum SchemaTypeEnum {
-  string,
-  number,
-  integer,
-  boolean,
-  object,
-  array,
-  null,
-  any,
+  string = 'string',
+  number = 'number',
+  integer = 'integer',
+  boolean = 'boolean',
+  object = 'object',
+  array = 'array',
+  null = 'null',
+  any = 'any',
 }
 
 export interface SchemaObjectTS {
@@ -130,14 +130,12 @@ export interface ApiItemTS {
   responseList: ResponseItemTS[]
 }
 
-
-
 // jsonSchema格式的 api列表
 export interface ApiJsonSchemaItemTS {
   path: string
   method: string
   name: string // 接口名称
-  description: string // 描述
+  description?: string // 描述
   requestPathParam: SchemaObjectTS // 请求路径参数
   requestPathQuery:SchemaObjectTS  // 请求路径query
   requestHeader: SchemaObjectTS // 请求头
@@ -150,7 +148,7 @@ export interface ApiJsonItemTS {
   path: string
   method: string
   name: string // 接口名称
-  description: string // 描述
+  description?: string // 描述
   requestPathParam: ObjectValueTS // 请求路径参数
   requestPathQuery:ObjectValueTS  // 请求路径query
   requestHeader: ObjectValueTS // 请求头
@@ -224,7 +222,6 @@ export interface ObjectValueTS {
 
 
 export interface GenTSOptionsTS {
-  // responseDataKey?: string
   setInterfaceName?: Function
 }
 
